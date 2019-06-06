@@ -17,8 +17,9 @@ var commands = []string{
 	"ir_cut off",
 	"ir_cut status",
 
-	// all motor [direction] commands must have a numerical value attached
-	// e.g. motor up 100
+	// Motor [direction] commands may have a numerical value attached
+	// If no numerical values given, default is 100
+	// e.g. motor up 100; motor left 30; motor down
 	"motor up",
 	"motor down",
 	"motor left",
@@ -66,7 +67,10 @@ var commands = []string{
 	"auto_night_mode status",
 
 	// snapshots saved to /tmp/snapshot.jpeg
-	"snapshot",
+	"snapshot", // makes call to get_snapshot custom command after taking snapshot
 
 	"reboot_system",
+
+	// Custon Commands
+	"get_snapshot", // retrieves snapshot from cam and places in current directory
 }

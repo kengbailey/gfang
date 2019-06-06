@@ -4,119 +4,110 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
-
-	"golang.org/x/crypto/ssh"
 )
 
-// ExecuteSSH executes commands on a remote server.
-func ExecuteSSH(ip, username, password string, commands []string) {
-	// create ssh config
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-	client, err := ssh.Dial("tcp", ip+":22", config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	session, err := client.NewSession()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer session.Close()
-
-	// get input stream + bind outputs
-	stdin, err := session.StdinPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	err = session.Shell()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// send the commands
-	for _, cmd := range commands {
-		_, err = fmt.Fprintf(stdin, "%s\n", cmd)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// Wait for sess to finish
-	err = session.Wait()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// ExecuteHTTP executes commands on a fang via HTTP.
-// func ExecuteHTTP(ip, command string) {
-// 	var httpAddress string
-// 	if len(ip) > 0 && len(command) > 0 {
-// 		httpAddress = fmt.Sprintf("http://%s/cgi-bin/action.cgi?cmd=%s", ip, command)
-// 	}
-// 	resp, err := http.Get(httpAddress)
-// 	if err != nil {
-// 		log.Fatalf("Failed to execute http command (%s, %s): %v", ip, command, err)
-// 	}
-// 	body, err := ioutil.ReadAll(resp.Body)
-// 	if err != nil {
-// 		log.Fatalf("Failed to read http response body(%s): %v", httpAddress, err)
-// 	}
-// 	fmt.Println(httpAddress)
-// 	fmt.Println(string(body))
-// }
-
 // parseCams parses camString to a map of cameras w/ ips
+// TODO: check for invalid string splits
 func parseCams(camString string) (map[string]string, error) {
 	var camMap = make(map[string]string)
 	cams := strings.Split(camString, "//")
 	for _, cam := range cams {
 		temp := strings.Split(cam, "/")
-		camMap[temp[0]] = temp[1]
+		camMap[temp[1]] = temp[0]
 	}
 	return camMap, nil
 }
 
+// findCam tries to find cam in camMap
+func findCam(camMap map[string]string, cam string) (string, error) {
+	// is cam a number?
+	var selectedCam string
+	if camNumber, err := strconv.Atoi(cam); err == nil {
+		// it is a number
+		count := 0
+		for x := range camMap {
+			if camNumber == count {
+				selectedCam = x
+			}
+		}
+	} else {
+		// it is a string
+		for x := range camMap {
+			if x == cam {
+				selectedCam = x
+			}
+		}
+	}
+	if selectedCam == "" {
+		return "", fmt.Errorf("Failed to find cam! %s", cam)
+	}
+	return camMap[selectedCam], nil
+}
+
+// parseCommands parses commands from command line args
+// TODO: validate commands against argument list
+func parseCommands(args []string) ([]string, error) {
+	if len(args) < 2 {
+		return nil, fmt.Errorf("No commands detected! %v", args)
+	}
+	var command string
+	for i, x := range args {
+		if i > 1 {
+			command = command + " " + x
+		}
+	}
+	return []string{
+		command,
+		"exit",
+	}, nil
+}
+
 func main() {
 
-	// setup
-	_, userBool := os.LookupEnv("GFANG_USER")
+	if len(os.Args) < 2 {
+		log.Fatalln("Insufficient command line arguments")
+		// TODO: print example usage string
+		// TODO: enable command selection
+	}
+	args := os.Args
+
+	// fetch authentication
+	username, userBool := os.LookupEnv("GFANG_USER")
 	if !userBool {
 		log.Fatalln("GFANG_USER environment variable not found!")
 	}
-	_, passBool := os.LookupEnv("GFANG_PASS")
+	password, passBool := os.LookupEnv("GFANG_PASS")
 	if !passBool {
 		log.Fatalln("GFANG_PASS environment variable not found!")
 	}
+
+	// fetch,parse, and find cams
 	camString, camsBool := os.LookupEnv("GFANG_CAMS")
 	if !camsBool {
 		log.Fatalln("GFANG_CAMS environment variable not found!")
 	}
-	cams := parseCams(camString)
+	cams, err := parseCams(camString)
+	if err != nil {
+		log.Fatalf("Failed to parse cam list! %s", camString)
+	}
+	selectedCam, err := findCam(cams, args[1])
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	args := os.Args
-	fmt.Println(len(args))
+	// parse commands
+	commands, err := parseCommands(args)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	// commands := []string{
-	// 	"motor up 100",
-	// 	//"night_mode status",
-	// 	"exit",
-	// }
-
-	//ExecuteHTTP(fangs[0], "motor_right")
-
-	//ExecuteSSH(fangs[1], username, password, commands)
-
-	// for _, fang := range fangs {
-	// 	ExecuteSSH(fang, username, password, commands)
-	// }
+	// execute commands
+	//fmt.Println(selectedCam, username, password, commands)
+	err = executeSSH(selectedCam, username, password, commands)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 }
