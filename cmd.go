@@ -74,6 +74,7 @@ var commands = []string{
 	// CUSTOM COMMANDS
 	"get_snapshot",    // retrieves snapshot from cam and places in current directory
 	"motor calibrate", // calls command: motor reset_pos_count
+	"enable ftp",      // starts bftpd service on cam
 }
 
 // enableFTP enables FTP on cam
