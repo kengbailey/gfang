@@ -64,6 +64,16 @@ func parseCommands(args []string) ([]string, error) {
 	}, nil
 }
 
+// executeCommands executes parsed commands
+// TODO: implement command verification and custom command execution
+func executeCommands(commands []string, camMap map[string]string, selectedCam, username, password string) error {
+	err := executeSSH(selectedCam, username, password, commands)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 
 	if len(os.Args) < 2 {
@@ -83,7 +93,7 @@ func main() {
 		log.Fatalln("GFANG_PASS environment variable not found!")
 	}
 
-	// fetch,parse, and find cams
+	// fetch,parse, and find cam(s)
 	camString, camsBool := os.LookupEnv("GFANG_CAMS")
 	if !camsBool {
 		log.Fatalln("GFANG_CAMS environment variable not found!")
@@ -104,8 +114,7 @@ func main() {
 	}
 
 	// execute commands
-	//fmt.Println(selectedCam, username, password, commands)
-	err = executeSSH(selectedCam, username, password, commands)
+	err = executeCommands(commands, cams, selectedCam, username, password)
 	if err != nil {
 		log.Fatalln(err)
 	}

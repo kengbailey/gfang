@@ -2,82 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"os"
-	"time"
 
-	"github.com/jlaffaye/ftp"
 	"golang.org/x/crypto/ssh"
 )
 
-// getSnapshot retrieves a snapshot from a cam
-func getSnapshot(username, password, ip string) error {
-
-	// connect to cam
-	var conn *ftp.ServerConn
-	conn, err := ftp.Dial(ip+":21", ftp.DialWithTimeout(5*time.Second))
-	if err != nil {
-		// enable ftp and retry
-		err = enableFTP(username, password, ip)
-		if err != nil {
-			log.Fatal(err)
-		}
-		conn, err = ftp.Dial(ip+":21", ftp.DialWithTimeout(5*time.Second))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	err = conn.Login(username, password)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// retrieve snapshot
-	resp, err := conn.Retr("/tmp/snapshot.jpg")
-	if err != nil {
-		log.Fatalf("snapshot not found! %v", err)
-	}
-	defer resp.Close()
-	oFile, err := os.Create("snapshot.jpg")
-	if err != nil {
-		log.Fatal(err)
-	}
-	buf := make([]byte, 1024)
-	for {
-		n, err := resp.Read(buf)
-		if err != nil && err != io.EOF {
-			panic(err)
-		}
-		if n == 0 {
-			break
-		}
-		if _, err := oFile.Write(buf[:n]); err != nil {
-			log.Fatal(err)
-		}
-	}
-	err = conn.Quit()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
-}
-
-// enableFTP enables FTP on cam
-func enableFTP(username, password, ip string) error {
-	commands := []string{
-		"bftpd -D &",
-		"exit",
-	}
-	err := executeSSH(ip, username, password, commands)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // newClient creates a new sftp/ssh client
-func newClient(ip, username, password string) (*ssh.Client, error) {
+func newSSH(ip, username, password string) (*ssh.Client, error) {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -94,7 +25,7 @@ func newClient(ip, username, password string) (*ssh.Client, error) {
 
 // executeSSH executes commands on a remote server.
 func executeSSH(ip, username, password string, commands []string) error {
-	client, err := newClient(ip, username, password)
+	client, err := newSSH(ip, username, password)
 	if err != nil {
 		return err
 	}

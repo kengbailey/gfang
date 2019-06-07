@@ -32,7 +32,7 @@ var commands = []string{
 	"http_server restart",
 	"http_server status",
 
-	"http_password ", // set new http password [http_password new_password]
+	"http_password", // set new http password [http_password new_password]
 
 	"rtsp_h264_server on",
 	"rtsp_h264_server off",
@@ -71,6 +71,20 @@ var commands = []string{
 
 	"reboot_system",
 
-	// Custon Commands
-	"get_snapshot", // retrieves snapshot from cam and places in current directory
+	// CUSTOM COMMANDS
+	"get_snapshot",    // retrieves snapshot from cam and places in current directory
+	"motor calibrate", // calls command: motor reset_pos_count
+}
+
+// enableFTP enables FTP on cam
+func enableFTP(username, password, ip string) error {
+	commands := []string{
+		"/system/sdcard/controlscripts/ftp_server start", // start bftpd daemon
+		"exit",
+	}
+	err := executeSSH(ip, username, password, commands)
+	if err != nil {
+		return err
+	}
+	return nil
 }
