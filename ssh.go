@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -15,6 +16,7 @@ func newSSH(ip, username, password string) (*ssh.Client, error) {
 			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 3,
 	}
 	client, err := ssh.Dial("tcp", ip+":22", config)
 	if err != nil {

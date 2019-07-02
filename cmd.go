@@ -1,5 +1,26 @@
 package main
 
+// Command Mappings
+var commandMap = map[string]string{
+	"blue":   "blue_led",
+	"yellow": "yellow_led",
+	"ir":     "ir_led",
+	"ircut":  "ir_cut",
+	"mtr":    "motor",
+	"http":   "http_server",
+	"rtsp":   "rtsp_h264_server",
+	"motion": "motion_detection",
+	"reboot": "reboot_system",
+}
+
+// Custom Commands
+var customCommandsMap = map[string]string{
+	"snap":      "get_snapshot",    // retrieves snapshot from cam and places in current directory
+	"calibrate": "motor calibrate", // calls command: motor reset_pos_count
+	"ftpon":     "enable ftp",      // starts bftpd service on cam
+}
+
+// Official Commands
 var commands = []string{
 	"blue_led on",
 	"blue_led off",
@@ -70,11 +91,6 @@ var commands = []string{
 	"snapshot", // makes call to get_snapshot custom command after taking snapshot
 
 	"reboot_system",
-
-	// CUSTOM COMMANDS
-	"get_snapshot",    // retrieves snapshot from cam and places in current directory
-	"motor calibrate", // calls command: motor reset_pos_count
-	"enable ftp",      // starts bftpd service on cam
 }
 
 // enableFTP enables FTP on cam

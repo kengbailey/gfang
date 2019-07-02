@@ -21,8 +21,8 @@ func parseCams(camString string) (map[string]string, error) {
 }
 
 // findCam tries to find cam in camMap
+// is cam a number?
 func findCam(camMap map[string]string, cam string) (string, error) {
-	// is cam a number?
 	var selectedCam string
 	if camNumber, err := strconv.Atoi(cam); err == nil {
 		// it is a number
@@ -48,9 +48,9 @@ func findCam(camMap map[string]string, cam string) (string, error) {
 
 // parseCommands parses commands from command line args
 // TODO: validate commands against argument list
-func parseCommands(args []string) ([]string, error) {
+func parseCommands(args []string) (string, error) {
 	if len(args) < 2 {
-		return nil, fmt.Errorf("No commands detected! %v", args)
+		return "", fmt.Errorf("No commands detected! %v", args)
 	}
 	var command string
 	for i, x := range args {
@@ -58,20 +58,66 @@ func parseCommands(args []string) ([]string, error) {
 			command = command + " " + x
 		}
 	}
-	return []string{
-		command,
-		"exit",
-	}, nil
+	return command, nil
 }
 
-// executeCommands executes parsed commands
-// TODO: implement command verification and custom command execution
-func executeCommands(commands []string, camMap map[string]string, selectedCam, username, password string) error {
-	err := executeSSH(selectedCam, username, password, commands)
-	if err != nil {
-		return err
+// executeCommands executes parsed commands; currently only supports single commands
+func executeCommands(command string, camMap map[string]string, selectedCam, username, password string) error {
+
+	words := strings.Fields(command)
+	customCommand := isCustomCommand(words[0])
+	mappedCommand := isMappedCommand(words[0])
+
+	if customCommand {
+		// exeute custom command
+		fmt.Printf("Executing a custom command on %s ... \n", selectedCam)
+		commands := []string{words[0], "exit"}
+		err := executeSSH(selectedCam, username, password, commands)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Command: %s ... Success!\n", commands[0])
+	} else if mappedCommand {
+		// execute mapped command
+		fmt.Printf("Executing a mapped command on %s ... \n", selectedCam)
+		commands := []string{strings.Replace(command, words[0], commandMap[words[0]], 1), "exit"}
+		err := executeSSH(selectedCam, username, password, commands)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Command: %s ... Success!\n", commands[0])
+	} else {
+		// execute literal command
+		fmt.Printf("Executing a literal command on %s ... \n", selectedCam)
+		commands := []string{command, "exit"}
+		err := executeSSH(selectedCam, username, password, commands)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Command: %s ... Success!\n", commands[0])
 	}
+
 	return nil
+}
+
+// isCustomCommand checks if command is in customCommandsMap
+func isCustomCommand(command string) bool {
+	for k := range customCommandsMap {
+		if k == command {
+			return true
+		}
+	}
+	return false
+}
+
+// isMappedCommand cheks if command is in commandMap
+func isMappedCommand(command string) bool {
+	for k := range commandMap {
+		if k == command {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
@@ -108,15 +154,14 @@ func main() {
 	}
 
 	// parse commands
-	commands, err := parseCommands(args)
+	command, err := parseCommands(args)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// execute commands
-	err = executeCommands(commands, cams, selectedCam, username, password)
+	err = executeCommands(command, cams, selectedCam, username, password)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 }
