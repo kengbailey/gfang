@@ -20,6 +20,28 @@ var customCommandsMap = map[string]string{
 	"ftpon":     "enable ftp",      // starts bftpd service on cam
 }
 
+// executeCustomCommand executes custom commands
+// TODO: implement snapshot/snapfetch + video recording custom commands
+func executeCustomCommand(selectedCam, username, password, command string) (err error) {
+
+	// check for mapped custom command
+	for k := range customCommandsMap {
+		if k == command {
+			commands := []string{customCommandsMap[command], "exit"}
+			err = executeSSH(selectedCam, username, password, commands)
+			if err != nil {
+				return err
+			}
+			return
+		}
+	}
+
+	if command == "snapshot" {
+
+	}
+	return
+}
+
 // Official Commands
 var commands = []string{
 	"blue_led on",
