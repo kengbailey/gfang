@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // Command Mappings
 var commandMap = map[string]string{
 	"blue":   "blue_led",
@@ -14,32 +16,34 @@ var commandMap = map[string]string{
 }
 
 // Custom Commands
-var customCommandsMap = map[string]string{
-	"snap":      "get_snapshot",    // retrieves snapshot from cam and places in current directory
-	"calibrate": "motor calibrate", // calls command: motor reset_pos_count
-	"ftpon":     "enable ftp",      // starts bftpd service on cam
+var customCommands = []string{
+	"snapshot",
+	"snap",
 }
 
 // executeCustomCommand executes custom commands
-// TODO: implement snapshot/snapfetch + video recording custom commands
+// TODO: implement video recording custom command using ffmpeg
+// TODO: implement motor calibrate custom command
+// TODO: implement ftp status checking custom command[on off status]
+// TODO: implement status custom command; gets status of of various settings
 func executeCustomCommand(selectedCam, username, password, command string) (err error) {
 
-	// check for mapped custom command
-	for k := range customCommandsMap {
-		if k == command {
-			commands := []string{customCommandsMap[command], "exit"}
-			err = executeSSH(selectedCam, username, password, commands)
-			if err != nil {
-				return err
-			}
-			return
+	if command == "snapshot" || command == "snap" {
+		// execute snapshot command
+		err = executeSSH(selectedCam, username, password, []string{"snapshot", "exit"})
+		if err != nil {
+			return err
 		}
+		// fetch snapshot
+		err = getFile(username, password, selectedCam, "/tmp/snapshot.jpg")
+		if err != nil {
+			return err
+		}
+
+		return
 	}
 
-	if command == "snapshot" {
-
-	}
-	return
+	return fmt.Errorf("custom command(%s) not found", command)
 }
 
 // Official Commands

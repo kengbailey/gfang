@@ -71,30 +71,29 @@ func executeCommands(command string, camMap map[string]string, selectedCam, user
 	if customCommand {
 		// exeute custom command
 		fmt.Printf("Executing a custom command on %s ... \n", selectedCam)
-		commands := []string{words[0], "exit"}
-		err := executeSSH(selectedCam, username, password, commands)
+		err := executeCustomCommand(selectedCam, username, password, words[0])
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Command: %s ... Success!\n", commands[0])
+		fmt.Printf("Command: %s ... Success!\n", words[0])
 	} else if mappedCommand {
 		// execute mapped command
 		fmt.Printf("Executing a mapped command on %s ... \n", selectedCam)
-		commands := []string{strings.Replace(command, words[0], commandMap[words[0]], 1), "exit"}
+		cmds := []string{strings.Replace(command, words[0], commandMap[words[0]], 1), "exit"}
 		err := executeSSH(selectedCam, username, password, commands)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Command: %s ... Success!\n", commands[0])
+		fmt.Printf("Command: %s ... Success!\n", cmds[0])
 	} else {
 		// execute literal command
 		fmt.Printf("Executing a literal command on %s ... \n", selectedCam)
-		commands := []string{command, "exit"}
+		cmds := []string{command, "exit"}
 		err := executeSSH(selectedCam, username, password, commands)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Command: %s ... Success!\n", commands[0])
+		fmt.Printf("Command: %s ... Success!\n", cmds[0])
 	}
 
 	return nil
@@ -102,8 +101,8 @@ func executeCommands(command string, camMap map[string]string, selectedCam, user
 
 // isCustomCommand checks if command is in customCommandsMap
 func isCustomCommand(command string) bool {
-	for k := range customCommandsMap {
-		if k == command {
+	for _, cmd := range customCommands {
+		if cmd == command {
 			return true
 		}
 	}
