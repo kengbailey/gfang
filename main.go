@@ -80,7 +80,7 @@ func executeCommands(command string, camMap map[string]string, selectedCam, user
 		// execute mapped command
 		fmt.Printf("Executing a mapped command on %s ... \n", selectedCam)
 		cmds := []string{strings.Replace(command, words[0], commandMap[words[0]], 1), "exit"}
-		err := executeSSH(selectedCam, username, password, commands)
+		err := executeSSH(selectedCam, username, password, cmds)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func executeCommands(command string, camMap map[string]string, selectedCam, user
 		// execute literal command
 		fmt.Printf("Executing a literal command on %s ... \n", selectedCam)
 		cmds := []string{command, "exit"}
-		err := executeSSH(selectedCam, username, password, commands)
+		err := executeSSH(selectedCam, username, password, cmds)
 		if err != nil {
 			return err
 		}
