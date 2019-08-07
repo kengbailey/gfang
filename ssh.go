@@ -16,7 +16,7 @@ func newSSH(ip, username, password string) (*ssh.Client, error) {
 			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         time.Second * 3,
+		Timeout:         time.Second * 5,
 	}
 	client, err := ssh.Dial("tcp", ip+":22", config)
 	if err != nil {

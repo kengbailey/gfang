@@ -9,7 +9,7 @@ import (
 )
 
 // parseCams parses camString to a map of cameras w/ ips
-// TODO: check for invalid string splits
+// TODO: check for invalid string splits using regex
 func parseCams(camString string) (map[string]string, error) {
 	var camMap = make(map[string]string)
 	cams := strings.Split(camString, "//")
@@ -69,7 +69,7 @@ func executeCommands(command string, camMap map[string]string, selectedCam, user
 	mappedCommand := isMappedCommand(words[0])
 
 	if customCommand {
-		// exeute custom command
+		// execute custom command
 		fmt.Printf("Executing a custom command on %s ... \n", selectedCam)
 		err := executeCustomCommand(selectedCam, username, password, words[0])
 		if err != nil {
