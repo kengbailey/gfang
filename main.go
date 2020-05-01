@@ -62,32 +62,27 @@ func parseCommands(args []string) (string, error) {
 }
 
 // executeCommands executes parsed commands; currently only supports single commands
-func executeCommands(command string, camMap map[string]string, selectedCam, username, password string) error {
+func executeCommands(commands []string, camMap map[string]string, selectedCam, username, password string) error {
 
-	words := strings.Fields(command)
-	customCommand := isCustomCommand(words[0])
-	mappedCommand := isMappedCommand(words[0])
+	customCommand := isCustomCommand(commands[1])
 
 	if customCommand {
 		// execute custom command
 		fmt.Printf("Executing a custom command on %s ... \n", selectedCam)
-		err := executeCustomCommand(selectedCam, username, password, words[0])
+		err := executeCustomCommand(selectedCam, username, password, commands[1])
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Command: %s ... Success!\n", words[0])
-	} else if mappedCommand {
-		// execute mapped command
-		fmt.Printf("Executing a mapped command on %s ... \n", selectedCam)
-		cmds := []string{strings.Replace(command, words[0], commandMap[words[0]], 1), "exit"}
-		err := executeSSH(selectedCam, username, password, cmds)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Command: %s ... Success!\n", cmds[0])
+		fmt.Printf("Command: %s ... Success!\n", commands[1])
 	} else {
 		// execute literal command
 		fmt.Printf("Executing a literal command on %s ... \n", selectedCam)
+		var command string
+		for i, x := range commands {
+			if i > 1 {
+				command = command + " " + x
+			}
+		}
 		cmds := []string{command, "exit"}
 		err := executeSSH(selectedCam, username, password, cmds)
 		if err != nil {
@@ -110,14 +105,14 @@ func isCustomCommand(command string) bool {
 }
 
 // isMappedCommand cheks if command is in commandMap
-func isMappedCommand(command string) bool {
-	for k := range commandMap {
-		if k == command {
-			return true
-		}
-	}
-	return false
-}
+// func isMappedCommand(command string) bool {
+// 	for k := range commandMap {
+// 		if k == command {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func main() {
 
@@ -152,14 +147,28 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// parse commands
-	command, err := parseCommands(args)
-	if err != nil {
-		log.Fatalln(err)
+	// parse commands; put cmds on one line string
+	// command, err := parseCommands(args)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
+	// parse commands within main function
+	// do we need to parse command at all?
+	// lets just plass the argument list to executeComands()
+	if len(args) < 2 {
+		log.Fatalln(fmt.Errorf("No commands detected! %v", args))
 	}
+	// var command string
+	// for i, x := range args {
+	// 	if i > 1 {
+	// 		command = command + " " + x
+	// 	}
+	// }
+	// how is putting in the list v the one liner going to impact command execution
 
 	// execute commands
-	err = executeCommands(command, cams, selectedCam, username, password)
+	err = executeCommands(args, cams, selectedCam, username, password)
 	if err != nil {
 		log.Fatalln(err)
 	}
