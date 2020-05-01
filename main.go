@@ -46,21 +46,6 @@ func findCam(camMap map[string]string, cam string) (string, error) {
 	return camMap[selectedCam], nil
 }
 
-// parseCommands parses commands from command line args
-// TODO: validate commands against argument list
-func parseCommands(args []string) (string, error) {
-	if len(args) < 2 {
-		return "", fmt.Errorf("No commands detected! %v", args)
-	}
-	var command string
-	for i, x := range args {
-		if i > 1 {
-			command = command + " " + x
-		}
-	}
-	return command, nil
-}
-
 // executeCommands executes parsed commands; currently only supports single commands
 func executeCommands(commands []string, camMap map[string]string, selectedCam, username, password string) error {
 
@@ -104,16 +89,6 @@ func isCustomCommand(command string) bool {
 	return false
 }
 
-// isMappedCommand cheks if command is in commandMap
-// func isMappedCommand(command string) bool {
-// 	for k := range commandMap {
-// 		if k == command {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
 func main() {
 
 	if len(os.Args) < 2 {
@@ -146,26 +121,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	// parse commands; put cmds on one line string
-	// command, err := parseCommands(args)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-
-	// parse commands within main function
-	// do we need to parse command at all?
-	// lets just plass the argument list to executeComands()
-	if len(args) < 2 {
-		log.Fatalln(fmt.Errorf("No commands detected! %v", args))
-	}
-	// var command string
-	// for i, x := range args {
-	// 	if i > 1 {
-	// 		command = command + " " + x
-	// 	}
-	// }
-	// how is putting in the list v the one liner going to impact command execution
 
 	// execute commands
 	err = executeCommands(args, cams, selectedCam, username, password)
